@@ -7,10 +7,13 @@ use App\Core\Config;
 use App\Core\Container;
 use App\Core\Database;
 use App\Core\DB;
+use App\Http\Middlewares\SystemRoutesMiddleware;
 use App\Core\Router;
 use App\Core\Request;
-use App\Exceptions\NotFoundException;
 use App\Providers\ServiceProvider;
+use App\Http\Middlewares\ResponseEmitterMiddleware;
+use App\Core\MiddlewarePipeline;
+use App\Http\Middlewares\ExceptionHandlerMiddleware;
 
 class App
 {
@@ -18,12 +21,14 @@ class App
     private Router $router;
     private array $serviceProviders = [];
     private bool $booted = false;
+    private array $globalMiddleware = [];
 
     public function __construct()
     {
         $this->container = new Container();
         $this->router = new Router();
         $this->registerCoreServices();
+        $this->registerGlobalMiddleware();
     }
 
     /**
@@ -70,6 +75,18 @@ class App
     {
         $provider->register();
         $this->serviceProviders[] = $provider;
+    }
+
+    /**
+     * Register global middleware.
+     */
+    private function registerGlobalMiddleware(): void
+    {
+        $this->globalMiddleware = [
+            new SystemRoutesMiddleware(),
+            new ExceptionHandlerMiddleware(),
+            new ResponseEmitterMiddleware()
+        ];
     }
 
     /**
@@ -133,23 +150,87 @@ class App
         // Get the request instance
         $request = $this->container->make(Request::class);
         
-        try {
-            // Resolve the route
-            $response = $this->router->resolve($request->getMethod(), $request->getUri());
-            
-            // Send the response
-            if (is_string($response)) {
-                echo $response;
-            } elseif (is_array($response)) {
-                header('Content-Type: application/json');
-                echo json_encode($response);
+        // Create middleware pipeline
+        $pipeline = new MiddlewarePipeline();
+        
+        // Add global middleware (without ResponseEmitterMiddleware)
+        foreach ($this->globalMiddleware as $middleware) {
+            if (!$middleware instanceof ResponseEmitterMiddleware) {
+                $pipeline->through($middleware);
             }
-        } catch (NotFoundException $e) {
-            http_response_code(404);
-            echo $e->getMessage();
-        } catch (\Exception $e) {
-            http_response_code(500);
-            echo 'Internal Server Error: ' . $e->getMessage();
+        }
+        
+        // Set the destination (route handler) - this closure will resolve the route
+        $pipeline->send(function () use ($request) {
+            // Resolve the route
+            $routeAction = $this->router->resolve($request->getMethod(), $request->getUri());
+            
+            // If it's a callable (closure), execute it directly
+            if (is_callable($routeAction)) {
+                return $routeAction();
+            }
+            
+            // If it's an array, treat it as [Controller, method]
+            if (is_array($routeAction)) {
+                [$controller, $method] = $routeAction;
+                
+                // Check if controller class exists
+                if (!class_exists($controller)) {
+                    throw new \App\Exceptions\NotFoundException("Controller not found: {$controller}");
+                }
+                
+                // Instantiate the controller
+                $controllerInstance = new $controller();
+                
+                // Check if method exists
+                if (!method_exists($controllerInstance, $method)) {
+                    throw new \App\Exceptions\NotFoundException("Method not found: {$method} in {$controller}");
+                }
+                
+                // Call the method
+                return call_user_func([$controllerInstance, $method]);
+            }
+            
+            // If it's a string, treat it as a function name
+            if (is_string($routeAction) && function_exists($routeAction)) {
+                return $routeAction();
+            }
+            
+            throw new \App\Exceptions\NotFoundException("Invalid route action");
+        });
+        
+        // Execute the pipeline
+        $response = $pipeline->then();
+        
+        // Handle the response
+        $this->sendResponse($response);
+    }
+
+    /**
+     * Send the response to the browser.
+     *
+     * @param mixed $response
+     * @return void
+     */
+    private function sendResponse($response): void
+    {
+        if ($response instanceof \App\Core\Response) {
+            // Set HTTP status code
+            http_response_code($response->getStatus());
+            
+            // Set headers
+            foreach ($response->getHeaders() as $key => $value) {
+                header("$key: $value");
+            }
+            
+            // Output JSON encoded data
+            echo json_encode($response->getData());
+        } elseif (is_array($response)) {
+            // Legacy support for plain arrays
+            header('Content-Type: application/json');
+            echo json_encode($response);
+        } elseif (is_string($response)) {
+            echo $response;
         }
     }
 

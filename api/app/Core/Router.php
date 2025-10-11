@@ -66,13 +66,34 @@ class Router
      */
     private function registerRoute(string $method, string $route, $action): void
     {
-        // Normalize route - remove trailing slash except for root
-        $route = $route === '/' ? '/' : rtrim($route, '/');
+        // Normalize route - add leading slash if missing and remove trailing slash
+        $normalizedRoute = $this->normalizeRoute($route);
         
-        $this->routes[$method][$route] = [
+        $this->routes[$method][$normalizedRoute] = [
             'action' => $action,
             'params' => []
         ];
+    }
+
+    /**
+     * Normalize a route URI.
+     *
+     * @param string $route
+     * @return string
+     */
+    private function normalizeRoute(string $route): string
+    {
+        // Add leading slash if missing
+        if (empty($route)) {
+            return '/';
+        }
+        
+        if (strpos($route, '/') !== 0) {
+            $route = '/' . $route;
+        }
+        
+        // Remove trailing slash except for root
+        return $route === '/' ? '/' : rtrim($route, '/');
     }
 
     /**
@@ -85,44 +106,18 @@ class Router
      */
     public function resolve(string $requestMethod, string $requestUri)
     {
-        // Normalize route - remove trailing slash except for root
-        $route = $requestUri === '/' ? '/' : rtrim($requestUri, '/');
+        // Normalize the request URI
+        $normalizedUri = $this->normalizeRoute($requestUri);
         
         // Check if the route exists for the given method
-        if (!isset($this->routes[$requestMethod][$route])) {
-            throw new NotFoundException("Route not found: {$requestMethod} {$route}");
+        if (!isset($this->routes[$requestMethod][$normalizedUri])) {
+            throw new NotFoundException("Route not found: {$requestMethod} {$normalizedUri}");
         }
         
-        $routeInfo = $this->routes[$requestMethod][$route];
-        $action = $routeInfo['action'];
+        $routeInfo = $this->routes[$requestMethod][$normalizedUri];
         
-        // If it's a callable, execute it directly
-        if (is_callable($action)) {
-            return $action();
-        }
-        
-        // If it's an array, treat it as [Controller, method]
-        if (is_array($action)) {
-            [$controller, $method] = $action;
-            
-            // Check if controller class exists
-            if (!class_exists($controller)) {
-                throw new NotFoundException("Controller not found: {$controller}");
-            }
-            
-            // Instantiate the controller
-            $controllerInstance = new $controller();
-            
-            // Check if method exists
-            if (!method_exists($controllerInstance, $method)) {
-                throw new NotFoundException("Method not found: {$method} in {$controller}");
-            }
-            
-            // Call the method
-            return call_user_func([$controllerInstance, $method]);
-        }
-        
-        throw new NotFoundException("Invalid route action for: {$requestMethod} {$route}");
+        // Return the action so the App class can execute it
+        return $routeInfo['action'];
     }
 
     /**

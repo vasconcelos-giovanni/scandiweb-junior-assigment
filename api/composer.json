@@ -7,7 +7,9 @@
     },
     "autoload": {
         "psr-4": {
-            "App\\": "app/"
+            "App\\": "app/",
+            "public\\": "public/",
+            "routes\\": "routes/"
         }
     },
     "autoload-dev": {
