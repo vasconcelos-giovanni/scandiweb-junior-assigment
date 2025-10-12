@@ -11,4 +11,5 @@ interface ProductInterface
     public function getType(): string;
     public function getSpecificAttribute(): string;
     public function toArray(): array;
+    public function getSpecificAttributesArray(): array;
 }

@@ -22,4 +22,9 @@ class DvdProduct extends Product
     {
         return "Size: {$this->size} MB";
     }
+
+    public function getSpecificAttributesArray(): array
+    {
+        return ['size' => $this->size];
+    }
 }

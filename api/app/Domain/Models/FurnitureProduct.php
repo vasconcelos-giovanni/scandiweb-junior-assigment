@@ -26,4 +26,13 @@ class FurnitureProduct extends Product
     {
         return "Dimension: {$this->height}x{$this->width}x{$this->length}";
     }
+
+    public function getSpecificAttributesArray(): array
+    {
+        return [
+            'height' => $this->height,
+            'width' => $this->width,
+            'length' => $this->length,
+        ];
+    }
 }

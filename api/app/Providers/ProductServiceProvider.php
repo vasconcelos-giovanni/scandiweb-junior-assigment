@@ -1,70 +1,67 @@
 <?php
-// declare(strict_types=1);
+declare(strict_types=1);
 
-// namespace App\Providers;
+namespace App\Providers;
 
-// use App\Core\Container;
-// use App\Infrastructure\Factories\DvdProductFactory;
-// use App\Infrastructure\Factories\BookProductFactory;
-// use App\Infrastructure\Factories\FurnitureProductFactory;
-// use App\Infrastructure\Factories\ProductFactoryResolver;
-// use App\Infrastructure\Hydrators\DvdProductHydrator;
-// use App\Infrastructure\Hydrators\BookProductHydrator;
-// use App\Infrastructure\Hydrators\FurnitureProductHydrator;
-// use App\Infrastructure\Hydrators\ProductHydratorRegistry;
-// use App\Repositories\ProductRepository;
+use App\Core\Container;
+use App\Core\Database;
+use App\Infrastructure\Factories\DvdProductFactory;
+use App\Infrastructure\Factories\BookProductFactory;
+use App\Infrastructure\Factories\FurnitureProductFactory;
+use App\Infrastructure\Factories\ProductFactoryResolver;
+use App\Infrastructure\Hydrators\DvdProductHydrator;
+use App\Infrastructure\Hydrators\BookProductHydrator;
+use App\Infrastructure\Hydrators\FurnitureProductHydrator;
+use App\Infrastructure\Hydrators\ProductHydratorRegistry;
+use App\Repositories\ProductRepository;
+use App\Services\ProductService;
 
-// class ProductServiceProvider extends ServiceProvider
-// {
-//     public function register(): void
-//     {
-//         // Register factories
-//         $this->app->singleton('product.factory.dvd', function () {
-//             return new DvdProductFactory();
-//         });
+class ProductServiceProvider extends ServiceProvider
+{
+    public function register(): void
+    {
+        // === FACTORIES ===
+        // We bind each factory to a unique key so the resolver can find them.
+        $this->app->singleton('product.factory.dvd', fn() => new DvdProductFactory());
+        $this->app->singleton('product.factory.book', fn() => new BookProductFactory());
+        $this->app->singleton('product.factory.furniture', fn() => new FurnitureProductFactory());
+
+        // === FACTORY RESOLVER ===
+        // This class needs the container itself to resolve the factories above.
+        $this->app->singleton(ProductFactoryResolver::class, fn(Container $app) => new ProductFactoryResolver($app));
+
+        // === HYDRATORS ===
+        // We bind each hydrator to a unique key for the registry.
+        $this->app->singleton('product.hydrator.dvd', fn() => new DvdProductHydrator());
+        $this->app->singleton('product.hydrator.book', fn() => new BookProductHydrator());
+        $this->app->singleton('product.hydrator.furniture', fn() => new FurnitureProductHydrator());
         
-//         $this->app->singleton('product.factory.book', function () {
-//             return new BookProductFactory();
-//         });
-        
-//         $this->app->singleton('product.factory.furniture', function () {
-//             return new FurnitureProductFactory();
-//         });
-        
-//         // Register factory resolver
-//         $this->app->singleton(ProductFactoryResolver::class, function ($app) {
-//             $resolver = new ProductFactoryResolver($app);
-//             return $resolver;
-//         });
-        
-//         // Register hydrators
-//         $this->app->singleton('product.hydrator.dvd', function () {
-//             return new DvdProductHydrator();
-//         });
-        
-//         $this->app->singleton('product.hydrator.book', function () {
-//             return new BookProductHydrator();
-//         });
-        
-//         $this->app->singleton('product.hydrator.furniture', function () {
-//             return new FurnitureProductHydrator();
-//         });
-        
-//         // Register hydrator registry
-//         $this->app->singleton(ProductHydratorRegistry::class, function ($app) {
-//             $registry = new ProductHydratorRegistry();
-//             $registry->register('dvd', $app->make('product.hydrator.dvd'));
-//             $registry->register('book', $app->make('product.hydrator.book'));
-//             $registry->register('furniture', $app->make('product.hydrator.furniture'));
-//             return $registry;
-//         });
-        
-//         // Register repository
-//         $this->app->singleton(ProductRepository::class, function ($app) {
-//             return new ProductRepository(
-//                 $app->make('db'),
-//                 $app->make(ProductHydratorRegistry::class)
-//             );
-//         });
-//     }
-// }
+        // === HYDRATOR REGISTRY ===
+        // We create a single registry and then populate it with the hydrators we just bound.
+        $this->app->singleton(ProductHydratorRegistry::class, function (Container $app) {
+            $registry = new ProductHydratorRegistry();
+            $registry->register('dvd', $app->make('product.hydrator.dvd'));
+            $registry->register('book', $app->make('product.hydrator.book'));
+            $registry->register('furniture', $app->make('product.hydrator.furniture'));
+            return $registry;
+        });
+
+        // === REPOSITORY ===
+        // The repository depends on the Database connection and the Hydrator Registry.
+        $this->app->singleton(ProductRepository::class, function (Container $app) {
+            return new ProductRepository(
+                $app->make(Database::class),
+                $app->make(ProductHydratorRegistry::class)
+            );
+        });
+
+        // === SERVICE ===
+        // The service is the main entry point for our controllers. It depends on the Repository and the Factory Resolver.
+        $this->app->singleton(ProductService::class, function (Container $app) {
+            return new ProductService(
+                $app->make(ProductRepository::class),
+                $app->make(ProductFactoryResolver::class)
+            );
+        });
+    }
+}

@@ -44,4 +44,5 @@ abstract class Product implements ProductInterface
 
     abstract public function getType(): string;
     abstract public function getSpecificAttribute(): string;
+    abstract public function getSpecificAttributesArray(): array;
 }

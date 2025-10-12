@@ -22,4 +22,9 @@ class BookProduct extends Product
     {
         return "Weight: {$this->weight} KG";
     }
+
+    public function getSpecificAttributesArray(): array
+    {
+        return ['weight' => $this->weight];
+    }
 }
