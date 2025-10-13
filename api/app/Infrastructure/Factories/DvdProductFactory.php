@@ -11,6 +11,7 @@ class DvdProductFactory extends ProductFactory
     public function createProduct(array $data): ProductInterface
     {
         return new DvdProduct(
+            (int)$data['id'],
             $data['sku'],
             $data['name'],
             (float)$data['price'],

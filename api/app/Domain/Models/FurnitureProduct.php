@@ -9,9 +9,9 @@ class FurnitureProduct extends Product
     private int $width;
     private int $length;
 
-    public function __construct(string $sku, string $name, float $price, int $height, int $width, int $length)
+    public function __construct(int $id, string $sku, string $name, float $price, int $height, int $width, int $length)
     {
-        parent::__construct($sku, $name, $price);
+        parent::__construct($id, $sku, $name, $price);
         $this->height = $height;
         $this->width = $width;
         $this->length = $length;

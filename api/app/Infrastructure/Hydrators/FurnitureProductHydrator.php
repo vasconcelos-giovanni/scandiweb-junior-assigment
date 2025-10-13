@@ -11,6 +11,7 @@ class FurnitureProductHydrator implements ProductHydratorInterface
     public function hydrate(array $data): ProductInterface
     {
         return new FurnitureProduct(
+            (int)$data['id'],
             $data['sku'],
             $data['name'],
             (float)$data['price'],

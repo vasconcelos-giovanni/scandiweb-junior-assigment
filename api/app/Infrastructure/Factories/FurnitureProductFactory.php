@@ -11,6 +11,7 @@ class FurnitureProductFactory extends ProductFactory
     public function createProduct(array $data): ProductInterface
     {
         return new FurnitureProduct(
+            (int)$data['id'],
             $data['sku'],
             $data['name'],
             (float)$data['price'],

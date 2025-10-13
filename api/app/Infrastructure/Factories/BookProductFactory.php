@@ -11,6 +11,7 @@ class BookProductFactory extends ProductFactory
     public function createProduct(array $data): ProductInterface
     {
         return new BookProduct(
+            (int)$data['id'],
             $data['sku'],
             $data['name'],
             (float)$data['price'],

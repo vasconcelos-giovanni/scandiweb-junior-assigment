@@ -7,9 +7,9 @@ class DvdProduct extends Product
 {
     private int $size;
 
-    public function __construct(string $sku, string $name, float $price, int $size)
+    public function __construct(int $id, string $sku, string $name, float $price, int $size)
     {
-        parent::__construct($sku, $name, $price);
+        parent::__construct($id, $sku, $name, $price);
         $this->size = $size;
     }
 

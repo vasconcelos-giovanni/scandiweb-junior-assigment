@@ -7,9 +7,9 @@ class BookProduct extends Product
 {
     private float $weight;
 
-    public function __construct(string $sku, string $name, float $price, float $weight)
+    public function __construct(int $id, string $sku, string $name, float $price, float $weight)
     {
-        parent::__construct($sku, $name, $price);
+        parent::__construct($id, $sku, $name, $price);
         $this->weight = $weight;
     }
 

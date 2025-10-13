@@ -11,6 +11,7 @@ class BookProductHydrator implements ProductHydratorInterface
     public function hydrate(array $data): ProductInterface
     {
         return new BookProduct(
+            (int)$data['id'],
             $data['sku'],
             $data['name'],
             (float)$data['price'],

@@ -5,15 +5,22 @@ namespace App\Domain\Models;
 
 abstract class Product implements ProductInterface
 {
+    protected int $id;
     protected string $sku;
     protected string $name;
     protected float $price;
 
-    public function __construct(string $sku, string $name, float $price)
+    public function __construct(int $id, string $sku, string $name, float $price)
     {
+        $this->id = $id;
         $this->sku = $sku;
         $this->name = $name;
         $this->price = $price;
+    }
+
+    public function getId(): int
+    {
+        return $this->id;
     }
 
     public function getSku(): string
@@ -34,6 +41,7 @@ abstract class Product implements ProductInterface
     public function toArray(): array
     {
         return [
+            'id' => $this->getId(),
             'sku' => $this->getSku(),
             'name' => $this->getName(),
             'price' => $this->getPrice(),

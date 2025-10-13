@@ -11,6 +11,7 @@ class DvdProductHydrator implements ProductHydratorInterface
     public function hydrate(array $data): ProductInterface
     {
         return new DvdProduct(
+            (int)$data['id'],
             $data['sku'],
             $data['name'],
             (float)$data['price'],
