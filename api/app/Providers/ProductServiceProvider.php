@@ -5,6 +5,11 @@ namespace App\Providers;
 
 use App\Core\Container;
 use App\Core\Database;
+use App\Http\Controllers\ProductController;
+use App\Http\Requests\Validation\BookProductValidationStrategy;
+use App\Http\Requests\Validation\DvdProductValidationStrategy;
+use App\Http\Requests\Validation\FurnitureProductValidationStrategy;
+use App\Http\Requests\Validation\ProductValidationStrategyResolver;
 use App\Infrastructure\Factories\DvdProductFactory;
 use App\Infrastructure\Factories\BookProductFactory;
 use App\Infrastructure\Factories\FurnitureProductFactory;
@@ -62,6 +67,19 @@ class ProductServiceProvider extends ServiceProvider
                 $app->make(ProductRepository::class),
                 $app->make(ProductFactoryResolver::class)
             );
+        });
+
+        // === VALIDATION STRATEGIES ===
+        $this->app->singleton('product.validation.dvd', fn() => new DvdProductValidationStrategy());
+        $this->app->singleton('product.validation.book', fn() => new BookProductValidationStrategy());
+        $this->app->singleton('product.validation.furniture', fn() => new FurnitureProductValidationStrategy());
+
+        // === VALIDATION RESOLVER ===
+        $this->app->singleton(ProductValidationStrategyResolver::class, fn(Container $app) => new ProductValidationStrategyResolver($app));
+
+        // Register product controller
+        $this->app->singleton(ProductController::class, function ($app) {
+            return new ProductController($app->make(ProductService::class));
         });
     }
 }

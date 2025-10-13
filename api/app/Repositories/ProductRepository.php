@@ -25,7 +25,7 @@ class ProductRepository
     {
         $sql = "
             SELECT 
-                p.sku, p.name, p.price, p.type,
+                p.id, p.sku, p.name, p.price, p.type,
                 d.size,
                 b.weight,
                 f.height, f.width, f.length
@@ -37,13 +37,12 @@ class ProductRepository
         ";
 
         $stmt = $this->db->query($sql);
-        $productsData = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+        $productsData = $stmt->fetchAll(\PDO::FETCH_ASSOC);       
 
         $products = [];
         foreach ($productsData as $data) {
-
             $hydrator = $this->hydratorRegistry->get($data['type']);
-            $products[] = $hydrator->hydrate($data);            
+            $products[] = $hydrator->hydrate($data);
         }
 
         return $products;
@@ -54,16 +53,15 @@ class ProductRepository
         $this->db->beginTransaction();
 
         try {
-            // Step 1: Insert into the parent products table
             $sqlProducts = "INSERT INTO products (sku, name, price, type) VALUES (?, ?, ?, ?)";
             $this->db->query($sqlProducts, [
+                
                 $product->getSku(),
                 $product->getName(),
                 $product->getPrice(),
                 $product->getType()
-            ]);
+            ]);          
 
-            // Step 2: Insert into the specific child table
             $specificAttributes = $product->getSpecificAttributesArray();
             $columns = array_keys($specificAttributes);
             $values = array_values($specificAttributes);
@@ -71,9 +69,9 @@ class ProductRepository
             $placeholders = implode(', ', array_fill(0, count($values), '?'));
             $tableName = 'products_' . $product->getType();
 
-            $sqlSpecific = "INSERT INTO {$tableName} (sku, " . implode(', ', $columns) . ") VALUES (?," . $placeholders . ")";
-            
-            $this->db->query($sqlSpecific, array_merge([$product->getSku()], $values));
+            $sqlSpecific = "INSERT INTO {$tableName} (product_id, " . implode(', ', $columns) . ") VALUES (?," . $placeholders . ")";
+
+            $this->db->query($sqlSpecific, array_merge([$product->getId()], $values));
 
             // If all goes well, commit the transaction
             $this->db->commit();

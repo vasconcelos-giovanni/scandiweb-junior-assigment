@@ -33,11 +33,9 @@ class ProductService
         //     throw new DuplicateSkuException("SKU '{$data['sku']}' already exists.");
         // }
         
-        // 2. Use the factory to create a domain object from request data
         $factory = $this->factoryResolver->resolve($data['type']);
         $product = $factory->createProduct($data);
         
-        // 3. Use the repository to persist the domain object
         $this->productRepository->save($product);
     }
 
