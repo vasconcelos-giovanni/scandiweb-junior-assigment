@@ -9,13 +9,15 @@ abstract class Product implements ProductInterface
     protected string $sku;
     protected string $name;
     protected float $price;
+    protected string $type;
 
-    public function __construct(int $id, string $sku, string $name, float $price)
+    public function __construct(int $id, string $sku, string $name, float $price, string $type)
     {
         $this->id = $id;
         $this->sku = $sku;
         $this->name = $name;
         $this->price = $price;
+        $this->type = $type;
     }
 
     public function getId(): int
@@ -23,7 +25,7 @@ abstract class Product implements ProductInterface
         return $this->id;
     }
 
-    public function getSku(): string
+        public function getSku(): string
     {
         return $this->sku;
     }
@@ -38,6 +40,32 @@ abstract class Product implements ProductInterface
         return $this->price;
     }
 
+    abstract public function getType(): string;
+
+    public function setId(int $id): void
+    {
+        $this->id = $id;
+    }
+
+    public function setSku(string $sku): void
+    {
+        $this->sku = $sku;
+    }
+
+    public function setName(string $name): void
+    {
+        $this->name = $name;
+    }
+
+    public function setPrice(float $price): void
+    {
+        $this->price = $price;
+    }
+
+    public function setType(string $type): void {
+        $this->type = $type;
+    }
+
     public function toArray(): array
     {
         return [
@@ -50,7 +78,6 @@ abstract class Product implements ProductInterface
         ];
     }
 
-    abstract public function getType(): string;
     abstract public function getSpecificAttribute(): string;
     abstract public function getSpecificAttributesArray(): array;
 }
