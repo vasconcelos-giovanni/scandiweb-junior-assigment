@@ -5,12 +5,12 @@ namespace App\Core;
 
 class Response
 {
-    private mixed $data;
+    private $data; // Removed 'mixed' type
     private int $status;
     private array $headers;
 
     public function __construct(
-        mixed $data = null,
+        $data = null, // Removed 'mixed' type
         int $status = 200,
         array $headers = []
     ) {
@@ -19,7 +19,7 @@ class Response
         $this->headers = array_merge(['Content-Type' => 'application/json'], $headers);
     }
 
-    public function getData(): mixed
+    public function getData() // Removed 'mixed' return type
     {
         return $this->data;
     }
@@ -43,7 +43,7 @@ class Response
      * @return static
      */
     public static function json(
-        mixed $data = null,
+        $data = null, // Removed 'mixed' type
         int $status = 200,
         array $headers = []
     ): self {
@@ -59,7 +59,7 @@ class Response
      * @return static
      */
     public static function success(
-        mixed $data = null,
+        $data = null, // Removed 'mixed' type
         string $message = 'Success',
         int $status = 200
     ): self {
@@ -80,7 +80,7 @@ class Response
      */
     public static function error(
         string $message = 'Error',
-        mixed $data = null,
+        $data = null, // Removed 'mixed' type
         int $status = 400
     ): self {
         return new self([
@@ -130,7 +130,7 @@ class Response
      * @return static
      */
     public static function created(
-        mixed $data = null,
+        $data = null, // Removed 'mixed' type
         string $message = 'Resource created successfully'
     ): self {
         return new self([

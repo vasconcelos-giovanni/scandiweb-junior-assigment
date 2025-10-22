@@ -46,10 +46,11 @@ class SystemRoutesMiddleware implements MiddlewareInterface
             return true;
         }
         
-        // Wildcard match (e.g., "/.well-known/*")
-        if (str_contains($pattern, '*')) {
+        // Wildcard match (e.g., "/.well-known/*") (PHP 7.4 compatible)
+        if (strpos($pattern, '*') !== false) {
             $prefix = rtrim($pattern, '*');
-            return str_starts_with($uri, $prefix);
+            // Use strpos for prefix check, which is equivalent to str_starts_with
+            return strpos($uri, $prefix) === 0;
         }
         
         return false;

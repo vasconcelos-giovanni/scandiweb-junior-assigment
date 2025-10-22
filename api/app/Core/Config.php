@@ -20,7 +20,8 @@ class Config
         $lines = file($path, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
         
         foreach ($lines as $line) {
-            if (str_starts_with($line, '#')) {
+            // PHP 7.4 compatible check
+            if (substr(trim($line), 0, 1) === '#') {
                 continue;
             }
 
@@ -30,10 +31,11 @@ class Config
                 $key = trim($parts[0]);
                 $value = trim($parts[1]);
                 
-                // Remove surrounding quotes if present
-                if (str_starts_with($value, '"') && str_ends_with($value, '"')) {
-                    $value = substr($value, 1, -1);
-                } elseif (str_starts_with($value, "'") && str_ends_with($value, "'")) {
+                // Remove surrounding quotes if present (PHP 7.4 compatible)
+                if (
+                    (substr($value, 0, 1) === '"' && substr($value, -1) === '"') ||
+                    (substr($value, 0, 1) === "'" && substr($value, -1) === "'")
+                ) {
                     $value = substr($value, 1, -1);
                 }
                 
