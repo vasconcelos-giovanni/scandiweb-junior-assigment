@@ -18,13 +18,6 @@ class DvdProduct extends Product
      */
     protected int $size;
 
-    // --- Implementation of the Entity Contract ---
-
-    public static function getTableName(): string
-    {
-        return 'dvd_products';
-    }
-
     // --- Getters ---
 
     public function getSize(): int
