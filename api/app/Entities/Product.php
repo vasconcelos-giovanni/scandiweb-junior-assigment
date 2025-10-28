@@ -8,6 +8,10 @@ use App\Core\Entity;
 /**
  * The base class for all product types in the domain.
  * It serves as the parent in a Class Table Inheritance (CTI) hierarchy.
+ * 
+ * @Table(name="products")
+ * @DiscriminatorColumn(name="type", type="ENUM")
+ * @DiscriminatorMap(map={"dvd":"App\Entities\DvdProduct"}
  */
 abstract class Product extends Entity
 {
@@ -30,29 +34,6 @@ abstract class Product extends Entity
      * @Column(type="DECIMAL(10, 2)", options="NOT NULL")
      */
     protected float $price;
-
-    // --- Implementation of the Entity Contract ---
-
-    public static function getTableName(): string
-    {
-        return 'products';
-    }
-
-    public static function getDiscriminatorColumn(): ?string
-    {
-        return 'type';
-    }
-
-    public static function getDiscriminatorMap(): array
-    {
-        // Map discriminator values to their concrete child entity classes.
-        // Only include entities that exist under App\Entities.
-        return [
-            'dvd' => DvdProduct::class,
-            // 'book' => BookProduct::class,
-            // 'furniture' => FurnitureProduct::class,
-        ];
-    }
 
     // --- Getters ---
 
