@@ -3,7 +3,7 @@
     "description": "Product management system with OOP principles for Scandiweb test assignment.",
     "type": "project",
     "require": {
-        "php": ">=7.0"
+        "php": ">=7.4.33"
     },
     "autoload": {
         "psr-4": {
@@ -21,5 +21,13 @@
         ]
     },
     "minimum-stability": "stable",
-    "prefer-stable": true
+    "prefer-stable": true,
+    "config": {
+        "allow-plugins": {
+            "dealerdirect/phpcodesniffer-composer-installer": true
+        }
+    },
+    "require-dev": {
+        "phpcompatibility/php-compatibility": "^10.0.0@dev"
+    }
 }
