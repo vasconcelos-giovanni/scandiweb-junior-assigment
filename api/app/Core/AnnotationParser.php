@@ -26,14 +26,18 @@ class AnnotationParser
             $argsString = $match[2];     // e.g., type="VARCHAR(255)", options="NOT NULL"
 
             $args = [];
-            // Regex to find key="value" pairs
-            preg_match_all('/(\w+)\s*=\s*"(.*?)"/s', $argsString, $argMatches, PREG_SET_ORDER);
+                // First, parse double-quoted values: key="value"
+                $argMatches = [];
+                preg_match_all('/(\w+)\s*=\s*"([^"]*)"/s', $argsString, $doubleQuoted, PREG_SET_ORDER);
+                foreach ($doubleQuoted as $m) {
+                    $args[$m[1]] = $m[2];
+                }
 
-            foreach ($argMatches as $argMatch) {
-                $key = $argMatch[1];   // e.g., "type"
-                $value = $argMatch[2]; // e.g., "VARCHAR(255)"
-                $args[$key] = $value;
-            }
+                // Then, parse single-quoted values: key='value'
+                preg_match_all('/(\w+)\s*=\s*\'([^\']*)\'/s', $argsString, $singleQuoted, PREG_SET_ORDER);
+                foreach ($singleQuoted as $m) {
+                    $args[$m[1]] = $m[2];
+                }
 
             $annotations[$annotationName] = $args;
         }

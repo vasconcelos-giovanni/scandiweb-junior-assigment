@@ -12,7 +12,7 @@ use App\Core\Entity;
  *
  * @Table(name="products")
  * @DiscriminatorColumn(name="type", type="ENUM")
- * @DiscriminatorMap(map={"dvd":"App\Entities\DvdProduct"}
+ * @DiscriminatorMap(dvd="App\\Entities\\DvdProduct")
  */
 abstract class Product extends Entity
 {

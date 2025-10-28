@@ -76,12 +76,30 @@ abstract class Entity
     public static function getDiscriminatorMap(): array
     {
         $annotation = self::getAnnotation('DiscriminatorMap');
-        if (isset($annotation['map'])) {
-            // The map is stored as a JSON-like string, e.g., '{"dvd":"App\Entities\DvdProduct"}'
-            $map = json_decode('{' . $annotation['map'] . '}', true);
-            if (is_array($map)) {
-                return $map;
+        if (!$annotation) {
+            return [];
+        }
+
+        // Preferred style: @DiscriminatorMap(dvd="App\\Entities\\DvdProduct", book="...")
+        // In this case, the annotation array already matches the desired map shape.
+        if (!isset($annotation['map'])) {
+            // Normalize FQCN backslashes
+            $map = [];
+            foreach ($annotation as $key => $value) {
+                $map[$key] = str_replace('\\\\', '\\', $value);
             }
+            return $map; // keys are discriminator values, values are FQCNs
+        }
+
+        // Backward-compat style: @DiscriminatorMap(map='"dvd":"App\\Entities\\DvdProduct"')
+        $inner = $annotation['map'];
+        $json = '{' . $inner . '}';
+        $decoded = json_decode($json, true);
+        if (is_array($decoded)) {
+            foreach ($decoded as $k => $v) {
+                $decoded[$k] = str_replace('\\\\', '\\', $v);
+            }
+            return $decoded;
         }
         return [];
     }
