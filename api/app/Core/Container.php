@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace App\Core;
@@ -29,7 +30,7 @@ class Container
 
         // Get the concrete implementation
         $concrete = $this->bindings[$abstract] ?? null;
-        
+
         if ($concrete === null) {
             throw new \InvalidArgumentException("No binding found for {$abstract}");
         }

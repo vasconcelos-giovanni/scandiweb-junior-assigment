@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace App\Entities;
@@ -8,7 +9,7 @@ use App\Core\Entity;
 /**
  * The base class for all product types in the domain.
  * It serves as the parent in a Class Table Inheritance (CTI) hierarchy.
- * 
+ *
  * @Table(name="products")
  * @DiscriminatorColumn(name="type", type="ENUM")
  * @DiscriminatorMap(map={"dvd":"App\Entities\DvdProduct"}
@@ -37,11 +38,23 @@ abstract class Product extends Entity
 
     // --- Getters ---
 
-    public function getId(): int { return $this->id; }
-    public function getSku(): string { return $this->sku; }
-    public function getName(): string { return $this->name; }
-    public function getPrice(): float { return $this->price; }
-    
+    public function getId(): int
+    {
+        return $this->id;
+    }
+    public function getSku(): string
+    {
+        return $this->sku;
+    }
+    public function getName(): string
+    {
+        return $this->name;
+    }
+    public function getPrice(): float
+    {
+        return $this->price;
+    }
+
     // --- Setters ---
 
     /**
@@ -89,7 +102,7 @@ abstract class Product extends Entity
             $property->setAccessible(true);
             $data[$property->getName()] = $property->getValue($this);
         }
-        
+
         // --- THIS IS THE NEW DYNAMIC PART ---
         // 1. Get the map: ['dvd' => DvdProduct::class, ...]
         $discriminatorMap = static::getDiscriminatorMap();

@@ -1,11 +1,11 @@
 <?php
-declare(strict_types= 1);
+
+declare(strict_types=1);
 
 use App\Core\Response;
 use App\Entities\DvdProduct;
 use App\Http\Controllers\ProductController;
 use App\Entities\Product;
-
 
 $router->get('/test', function () {
     $dvd = new DvdProduct();

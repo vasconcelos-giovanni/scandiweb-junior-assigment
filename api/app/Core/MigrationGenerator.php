@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace App\Core;
@@ -31,7 +32,8 @@ class MigrationGenerator
     public function generate(string $entityClass, bool $isChild = false, ?string $primaryKeyName = null): string
     {
         if (!is_subclass_of($entityClass, Entity::class)) {
-            throw new \InvalidArgumentException("Class {$entityClass} must extend " . Entity::class);
+            $msg = 'Class ' . $entityClass . ' must extend ' . Entity::class;
+            throw new \InvalidArgumentException($msg);
         }
 
         $reflection = new ReflectionClass($entityClass);
@@ -42,10 +44,12 @@ class MigrationGenerator
         if (!$isChild) {
             $primaryKeyName = $this->findPrimaryKeyName($reflection);
         }
-        
+
         // A child entity requires a primary key name from its parent.
         if ($isChild && $primaryKeyName === null) {
-            throw new \LogicException("Child entity {$entityClass} must inherit a primary key name from its parent.");
+            $msg = 'Child entity ' . $entityClass
+                . ' must inherit a primary key name from its parent.';
+            throw new \LogicException($msg);
         }
 
         // For child tables, the primary key column also acts as the foreign key.
@@ -55,11 +59,14 @@ class MigrationGenerator
         }
 
         // Iterate over properties declared *only* in the current class to avoid duplication.
-        foreach ($reflection->getProperties(\ReflectionProperty::IS_PRIVATE | \ReflectionProperty::IS_PROTECTED) as $property) {
+        $declaredProps = $reflection->getProperties(
+            \ReflectionProperty::IS_PRIVATE | \ReflectionProperty::IS_PROTECTED
+        );
+        foreach ($declaredProps as $property) {
             if ($property->getDeclaringClass()->getName() !== $entityClass) {
                 continue; // Skip inherited properties.
             }
-            
+
             $docComment = $property->getDocComment();
             if ($docComment && strpos($docComment, '@Column') !== false) {
                 $annotations = $this->parser->parse($docComment);
@@ -71,23 +78,25 @@ class MigrationGenerator
                 }
             }
         }
-        
+
         // Add the discriminator column for parent tables that have a map.
         if (!$isChild && ($discriminatorColumn = $entityClass::getDiscriminatorColumn())) {
             $types = array_keys($entityClass::getDiscriminatorMap());
             $enumDef = "ENUM('" . implode("', '", $types) . "') NOT NULL";
             $columnsSql[] = "    `{$discriminatorColumn}` {$enumDef}";
         }
-        
+
         // Add the foreign key constraint for child tables, using the discovered PK name.
         if ($isChild) {
             $parentClassName = $reflection->getParentClass()->getName();
             $parentTableName = $parentClassName::getTableName();
-            $columnsSql[] = "    FOREIGN KEY (`{$primaryKeyName}`) REFERENCES `{$parentTableName}`(`{$primaryKeyName}`) ON DELETE CASCADE";
+            $fk = '    FOREIGN KEY (`' . $primaryKeyName . '`) REFERENCES `'
+                . $parentTableName . '`(`' . $primaryKeyName . '`) ON DELETE CASCADE';
+            $columnsSql[] = $fk;
         }
 
         // Assemble the final CREATE TABLE statement.
-        $sql = "CREATE TABLE IF NOT EXISTS `{$tableName}` (\n";
+        $sql = 'CREATE TABLE IF NOT EXISTS `' . $tableName . '` (' . "\n";
         $sql .= implode(",\n", $columnsSql);
         $sql .= "\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;\n\n";
 
@@ -114,12 +123,16 @@ class MigrationGenerator
             $docComment = $property->getDocComment();
             if ($docComment) {
                 $annotations = $this->parser->parse($docComment);
-                if (isset($annotations['Column']['options']) && strpos(strtoupper($annotations['Column']['options']), 'PRIMARY KEY') !== false) {
+                $hasOptions = isset($annotations['Column']['options']);
+                $isPrimary = $hasOptions
+                    && strpos(strtoupper($annotations['Column']['options']), 'PRIMARY KEY') !== false;
+                if ($isPrimary) {
                     return $property->getName(); // Found it!
                 }
             }
         }
 
-        throw new \LogicException("No property with 'PRIMARY KEY' option found in entity " . $reflection->getName());
+        $msg = "No property with 'PRIMARY KEY' option found in entity " . $reflection->getName();
+        throw new \LogicException($msg);
     }
 }

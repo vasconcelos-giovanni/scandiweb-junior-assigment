@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace App\Entities;
@@ -6,7 +7,7 @@ namespace App\Entities;
 /**
  * Represents a DVD, which is a specific type of Product.
  * It stores its unique attribute, size, in a separate table.
- * 
+ *
  * @Table(name="dvd_products")
  */
 class DvdProduct extends Product

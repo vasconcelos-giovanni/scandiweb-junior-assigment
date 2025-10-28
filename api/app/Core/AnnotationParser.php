@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace App\Core;
@@ -27,13 +28,13 @@ class AnnotationParser
             $args = [];
             // Regex to find key="value" pairs
             preg_match_all('/(\w+)\s*=\s*"(.*?)"/s', $argsString, $argMatches, PREG_SET_ORDER);
-            
+
             foreach ($argMatches as $argMatch) {
                 $key = $argMatch[1];   // e.g., "type"
                 $value = $argMatch[2]; // e.g., "VARCHAR(255)"
                 $args[$key] = $value;
             }
-            
+
             $annotations[$annotationName] = $args;
         }
 

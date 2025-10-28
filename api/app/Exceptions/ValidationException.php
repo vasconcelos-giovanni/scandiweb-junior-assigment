@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace App\Exceptions;
@@ -9,8 +10,11 @@ class ValidationException extends \Exception
 {
     protected array $errors;
 
-    public function __construct(array $errors, string $message = "Validation failed", int $code = HttpStatus::UNPROCESSABLE_ENTITY)
-    {
+    public function __construct(
+        array $errors,
+        string $message = 'Validation failed',
+        int $code = HttpStatus::UNPROCESSABLE_ENTITY
+    ) {
         parent::__construct($message, $code);
         $this->errors = $errors;
     }

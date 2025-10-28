@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace App\Core;
@@ -34,19 +35,19 @@ class Database
                     if (!is_dir($databaseDir)) {
                         mkdir($databaseDir, 0777, true);
                     }
-                    
+
                     // Create the database file if it doesn't exist
                     if (!file_exists($database)) {
                         touch($database);
                     }
-                    
+
                     $dataSourceName = "sqlite:{$database}";
                     break;
-                    
+
                 case 'mysql':
                     $dataSourceName = "mysql:host={$host};port={$port};dbname={$database};charset=utf8mb4";
                     break;
-                    
+
                 default:
                     throw new \InvalidArgumentException("Unsupported database driver: {$driver}");
             }
@@ -56,7 +57,6 @@ class Database
                 PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
                 PDO::ATTR_EMULATE_PREPARES => false,
             ]);
-            
         } catch (PDOException $e) {
             throw new PDOException("Database connection failed: " . $e->getMessage(), (int)$e->getCode());
         }

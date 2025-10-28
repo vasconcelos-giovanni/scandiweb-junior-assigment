@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace App\Core;
@@ -52,7 +53,9 @@ abstract class Entity
         if (isset($annotation['name'])) {
             return $annotation['name'];
         }
-        throw new \LogicException('Entity ' . static::class . ' is missing the required @Table(name="...") annotation.');
+        $message = 'Entity ' . static::class
+            . ' is missing the required @Table(name="...") annotation.';
+        throw new \LogicException($message);
     }
 
     /**

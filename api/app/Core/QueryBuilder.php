@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace App\Core;
@@ -77,14 +78,14 @@ class QueryBuilder
     {
         $columns = array_keys($data);
         $placeholders = array_fill(0, count($columns), '?');
-        
+
         $sql = sprintf(
             "INSERT INTO %s (%s) VALUES (%s)",
             $this->table,
             implode(', ', $columns),
             implode(', ', $placeholders)
         );
-        
+
         $this->bindings = array_values($data);
         $this->executeWithTransaction($sql);
         return (int)$this->connection->lastInsertId();
@@ -97,28 +98,28 @@ class QueryBuilder
             $setParts[] = "{$column} = ?";
             $this->bindings[] = $value;
         }
-        
+
         $sql = sprintf(
             "UPDATE %s SET %s",
             $this->table,
             implode(', ', $setParts)
         );
-        
+
         if (!empty($this->wheres)) {
             $sql .= " WHERE " . $this->buildWhereClause();
         }
-        
+
         return $this->executeWithTransaction($sql)->rowCount();
     }
 
     public function delete(): int
     {
         $sql = "DELETE FROM {$this->table}";
-        
+
         if (!empty($this->wheres)) {
             $sql .= " WHERE " . $this->buildWhereClause();
         }
-        
+
         return $this->executeWithTransaction($sql)->rowCount();
     }
 
@@ -126,26 +127,26 @@ class QueryBuilder
     {
         $columns = implode(', ', $this->columns);
         $sql = "SELECT {$columns} FROM {$this->table}";
-        
+
         if (!empty($this->wheres)) {
             $sql .= " WHERE " . $this->buildWhereClause();
         }
-        
+
         if ($this->limit !== null) {
             $sql .= " LIMIT {$this->limit}";
         }
-        
+
         if ($this->offset !== null) {
             $sql .= " OFFSET {$this->offset}";
         }
-        
+
         return $sql;
     }
 
     private function buildWhereClause(): string
     {
         $clauses = [];
-        
+
         foreach ($this->wheres as $where) {
             if ($where['type'] === 'basic') {
                 $clauses[] = "{$where['column']} {$where['operator']} ?";
@@ -154,29 +155,29 @@ class QueryBuilder
                 $clauses[] = "{$where['column']} IN ({$placeholders})";
             }
         }
-        
+
         return implode(' AND ', $clauses);
     }
 
     private function executeWithTransaction(string $sql): PDOStatement
     {
         $startedTransaction = !$this->connection->inTransaction();
-        
+
         if ($startedTransaction) {
             $this->connection->beginTransaction();
         }
-        
+
         try {
             $stmt = $this->connection->prepare($sql);
             $stmt->execute($this->bindings);
-            
+
             if ($startedTransaction) {
                 $this->connection->commit();
             }
-            
+
             // Reset bindings for next query
             $this->bindings = [];
-            
+
             return $stmt;
         } catch (\Exception $e) {
             if ($startedTransaction) {

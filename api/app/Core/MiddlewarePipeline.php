@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace App\Core;
@@ -64,7 +65,7 @@ class MiddlewarePipeline
                 $this->carrySlice(),
                 $this->prepareDestination($destination)
             );
-            
+
             return $pipeline();
         };
     }
