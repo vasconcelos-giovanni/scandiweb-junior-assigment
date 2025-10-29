@@ -89,29 +89,4 @@ abstract class Product extends Entity
         $this->price = $price;
         return $this;
     }
-
-    // --- Utility Methods ---
-
-    public function toArray(): array
-    {
-        $data = [];
-        $reflection = new \ReflectionObject($this);
-        $properties = $reflection->getProperties();
-
-        foreach ($properties as $property) {
-            $property->setAccessible(true);
-            $data[$property->getName()] = $property->getValue($this);
-        }
-
-        // --- THIS IS THE NEW DYNAMIC PART ---
-        // 1. Get the map: ['dvd' => DvdProduct::class, ...]
-        $discriminatorMap = static::getDiscriminatorMap();
-        // 2. Flip it: [DvdProduct::class => 'dvd', ...]
-        $flippedMap = array_flip($discriminatorMap);
-        // 3. Get the current object's class name and find its type string.
-        $data['type'] = $flippedMap[get_class($this)] ?? null;
-        // --- END OF NEW PART ---
-
-        return $data;
-    }
 }

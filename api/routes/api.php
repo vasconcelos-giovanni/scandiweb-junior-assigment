@@ -15,7 +15,7 @@ $router->get('/test', function () {
         ->setPrice(19.99)
         ->setSize(700);
 
-    dd($dvd->toArray());
+    dd($dvd);
 
     return Response::json(['message' => 'Hello, world!']);
 });
