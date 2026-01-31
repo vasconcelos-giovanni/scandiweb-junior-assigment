@@ -68,21 +68,24 @@ class ProductRepository extends Repository
      */
     public function findAll(): array
     {
-        $sql = "
-            SELECT 
-                p.id, p.sku, p.name, p.price, p.type,
-                d.size,
-                b.weight,
-                f.height, f.width, f.length
-            FROM products p
-            LEFT JOIN dvd_products d ON p.id = d.id
-            LEFT JOIN book_products b ON p.id = b.id
-            LEFT JOIN furniture_products f ON p.id = f.id
-            ORDER BY p.id ASC
-        ";
-
-        $stmt = $this->db->query($sql);
-        $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+        $rows = DB::table('products')
+            ->select([
+                'products.id',
+                'products.sku',
+                'products.name',
+                'products.price',
+                'products.type',
+                'dvd_products.size',
+                'book_products.weight',
+                'furniture_products.height',
+                'furniture_products.width',
+                'furniture_products.length'
+            ])
+            ->leftJoin('dvd_products', 'products.id', '=', 'dvd_products.id')
+            ->leftJoin('book_products', 'products.id', '=', 'book_products.id')
+            ->leftJoin('furniture_products', 'products.id', '=', 'furniture_products.id')
+            ->orderBy('products.id', 'ASC')
+            ->get();
 
         $products = [];
         foreach ($rows as $data) {
@@ -100,21 +103,24 @@ class ProductRepository extends Repository
      */
     public function findById(int $id): ?ProductInterface
     {
-        $sql = "
-            SELECT 
-                p.id, p.sku, p.name, p.price, p.type,
-                d.size,
-                b.weight,
-                f.height, f.width, f.length
-            FROM products p
-            LEFT JOIN dvd_products d ON p.id = d.id
-            LEFT JOIN book_products b ON p.id = b.id
-            LEFT JOIN furniture_products f ON p.id = f.id
-            WHERE p.id = ?
-        ";
-
-        $stmt = $this->db->query($sql, [$id]);
-        $data = $stmt->fetch(\PDO::FETCH_ASSOC);
+        $data = DB::table('products')
+            ->select([
+                'products.id',
+                'products.sku',
+                'products.name',
+                'products.price',
+                'products.type',
+                'dvd_products.size',
+                'book_products.weight',
+                'furniture_products.height',
+                'furniture_products.width',
+                'furniture_products.length'
+            ])
+            ->leftJoin('dvd_products', 'products.id', '=', 'dvd_products.id')
+            ->leftJoin('book_products', 'products.id', '=', 'book_products.id')
+            ->leftJoin('furniture_products', 'products.id', '=', 'furniture_products.id')
+            ->where('products.id', '=', $id)
+            ->first();
 
         if (!$data) {
             return null;
@@ -134,21 +140,24 @@ class ProductRepository extends Repository
      */
     public function findBySku(string $sku): ?ProductInterface
     {
-        $sql = "
-            SELECT 
-                p.id, p.sku, p.name, p.price, p.type,
-                d.size,
-                b.weight,
-                f.height, f.width, f.length
-            FROM products p
-            LEFT JOIN dvd_products d ON p.id = d.id
-            LEFT JOIN book_products b ON p.id = b.id
-            LEFT JOIN furniture_products f ON p.id = f.id
-            WHERE p.sku = ?
-        ";
-
-        $stmt = $this->db->query($sql, [$sku]);
-        $data = $stmt->fetch(\PDO::FETCH_ASSOC);
+        $data = DB::table('products')
+            ->select([
+                'products.id',
+                'products.sku',
+                'products.name',
+                'products.price',
+                'products.type',
+                'dvd_products.size',
+                'book_products.weight',
+                'furniture_products.height',
+                'furniture_products.width',
+                'furniture_products.length'
+            ])
+            ->leftJoin('dvd_products', 'products.id', '=', 'dvd_products.id')
+            ->leftJoin('book_products', 'products.id', '=', 'book_products.id')
+            ->leftJoin('furniture_products', 'products.id', '=', 'furniture_products.id')
+            ->where('products.sku', '=', $sku)
+            ->first();
 
         if (!$data) {
             return null;
