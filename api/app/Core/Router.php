@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace App\Core;
@@ -68,7 +69,7 @@ class Router
     {
         // Normalize route - add leading slash if missing and remove trailing slash
         $normalizedRoute = $this->normalizeRoute($route);
-        
+
         $this->routes[$method][$normalizedRoute] = [
             'action' => $action,
             'params' => []
@@ -87,11 +88,11 @@ class Router
         if (empty($route)) {
             return '/';
         }
-        
+
         if (strpos($route, '/') !== 0) {
             $route = '/' . $route;
         }
-        
+
         // Remove trailing slash except for root
         return $route === '/' ? '/' : rtrim($route, '/');
     }
@@ -108,14 +109,14 @@ class Router
     {
         // Normalize the request URI
         $normalizedUri = $this->normalizeRoute($requestUri);
-        
+
         // Check if the route exists for the given method
         if (!isset($this->routes[$requestMethod][$normalizedUri])) {
             throw new NotFoundException("Route not found: {$requestMethod} {$normalizedUri}");
         }
-        
+
         $routeInfo = $this->routes[$requestMethod][$normalizedUri];
-        
+
         // Return the action so the App class can execute it
         return $routeInfo['action'];
     }

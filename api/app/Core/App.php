@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace App\Core;
@@ -38,27 +39,27 @@ class App
     {
         // Bind the app instance
         $this->container->instance('app', $this);
-        
+
         // Register Request
         $this->container->singleton(Request::class, function () {
             return new Request();
         });
-        
+
         // Register Config
         $this->container->singleton(Config::class, function () {
             return new Config(dirname(__DIR__, 2) . '/.env');
         });
-        
+
         // Register Database
         $this->container->singleton(Database::class, function ($container) {
             return new Database($container->make(Config::class));
         });
-        
+
         // Set the database for DB facade
         $this->container->resolving(Database::class, function ($database) {
             DB::setDatabase($database);
         });
-        
+
         // Register Router
         $this->container->singleton(Router::class, function () {
             return $this->router;
@@ -140,69 +141,54 @@ class App
         return $this->container->make($abstract);
     }
 
-    /**
-     * Handle the incoming HTTP request.
-     *
-     * @return void
-     */
+    // Replace the entire handleRequest method in App.php with this new version
+
     public function handleRequest(): void
     {
-        // Get the request instance
         $request = $this->container->make(Request::class);
-        
-        // Create middleware pipeline
+
         $pipeline = new MiddlewarePipeline();
-        
-        // Add global middleware (without ResponseEmitterMiddleware)
+
         foreach ($this->globalMiddleware as $middleware) {
             if (!$middleware instanceof ResponseEmitterMiddleware) {
                 $pipeline->through($middleware);
             }
         }
-        
-        // Set the destination (route handler) - this closure will resolve the route
+
         $pipeline->send(function () use ($request) {
-            // Resolve the route
             $routeAction = $this->router->resolve($request->getMethod(), $request->getUri());
-            
-            // If it's a callable (closure), execute it directly
-            if (is_callable($routeAction)) {
-                return $routeAction();
+
+            // --- CHANGE FOR CLOSURES ---
+            if (is_callable($routeAction) && !is_array($routeAction)) {
+                // Instead of just calling it, let our new method resolve its dependencies
+                return $this->resolveDependenciesAndCall($routeAction);
             }
-            
-            // If it's an array, treat it as [Controller, method]
+
+            // --- CHANGE FOR CONTROLLERS ---
             if (is_array($routeAction)) {
                 [$controller, $method] = $routeAction;
-                
-                // Check if controller class exists
+
                 if (!class_exists($controller)) {
                     throw new \App\Exceptions\NotFoundException("Controller not found: {$controller}");
                 }
-                
-                // Instantiate the controller
-                $controllerInstance = new $controller();
-                
-                // Check if method exists
+
+                // Use the container to create the controller instance
+                // This allows the controller's constructor to have dependencies too!
+                $controllerInstance = $this->container->make($controller);
+
                 if (!method_exists($controllerInstance, $method)) {
                     throw new \App\Exceptions\NotFoundException("Method not found: {$method} in {$controller}");
                 }
-                
-                // Call the method
-                return call_user_func([$controllerInstance, $method]);
+
+                // Pass the controller instance and method to our resolver
+                return $this->resolveDependenciesAndCall([$controllerInstance, $method]);
             }
-            
-            // If it's a string, treat it as a function name
-            if (is_string($routeAction) && function_exists($routeAction)) {
-                return $routeAction();
-            }
-            
+
             throw new \App\Exceptions\NotFoundException("Invalid route action");
         });
-        
-        // Execute the pipeline
+
         $response = $pipeline->then();
-        
-        // Handle the response
+
         $this->sendResponse($response);
     }
 
@@ -217,12 +203,12 @@ class App
         if ($response instanceof \App\Core\Response) {
             // Set HTTP status code
             http_response_code($response->getStatus());
-            
+
             // Set headers
             foreach ($response->getHeaders() as $key => $value) {
                 header("$key: $value");
             }
-            
+
             // Output JSON encoded data
             echo json_encode($response->getData());
         } elseif (is_array($response)) {
@@ -232,6 +218,43 @@ class App
         } elseif (is_string($response)) {
             echo $response;
         }
+    }
+
+    // Add this new private method inside your App\Core\App class
+
+/**
+ * Resolve dependencies for a callable and execute it.
+ *
+ * @param callable $callable
+ * @return mixed
+ * @throws \ReflectionException
+ */
+    private function resolveDependenciesAndCall(callable $callable)
+    {
+        // 1. Get a reflection object based on the type of callable
+        $reflector = is_array($callable)
+        ? new \ReflectionMethod($callable[0], $callable[1])
+        : new \ReflectionFunction($callable);
+
+        // 2. Get the parameters of the function/method
+        $parameters = $reflector->getParameters();
+
+        $dependencies = [];
+        foreach ($parameters as $parameter) {
+            // 3. Get the type-hinted class name for the parameter
+            $type = $parameter->getType();
+
+            // 4. If it's a valid class/interface, resolve it from the container
+            if ($type && !$type->isBuiltin()) {
+                $className = $type->getName();
+                if ($this->container->has($className)) {
+                    $dependencies[] = $this->container->make($className);
+                }
+            }
+        }
+
+        // 5. Call the original function/method with the resolved dependencies
+        return call_user_func_array($callable, $dependencies);
     }
 
     /**
