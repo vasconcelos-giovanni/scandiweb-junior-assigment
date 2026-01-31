@@ -6,6 +6,7 @@ namespace App\Infrastructure\Factories;
 
 use App\Application\Dto\CreateFurnitureDto;
 use App\Application\Dto\CreateProductDtoInterface;
+use App\Core\Entity;
 use App\Domain\Contracts\ProductInterface;
 use App\Domain\Entities\FurnitureProduct;
 
@@ -19,7 +20,7 @@ class FurnitureProductFactory extends ProductFactory
      *
      * @param CreateFurnitureDto $dto
      */
-    public function createFromDto(CreateProductDtoInterface $dto): ProductInterface
+    public function createFromProductDto(CreateProductDtoInterface $dto): ProductInterface
     {
         /** @var CreateFurnitureDto $dto */
         $product = new FurnitureProduct();
@@ -36,7 +37,7 @@ class FurnitureProductFactory extends ProductFactory
     /**
      * {@inheritDoc}
      */
-    public function createFromArray(array $data): ProductInterface
+    public function createFromArray(array $data): Entity
     {
         $product = new FurnitureProduct();
 

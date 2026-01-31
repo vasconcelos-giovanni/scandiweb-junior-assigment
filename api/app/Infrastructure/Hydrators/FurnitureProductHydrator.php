@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Infrastructure\Hydrators;
 
-use App\Domain\Contracts\ProductInterface;
+use App\Core\Entity;
 use App\Domain\Entities\FurnitureProduct;
 
 /**
@@ -17,7 +17,7 @@ class FurnitureProductHydrator implements ProductHydratorInterface
     /**
      * {@inheritDoc}
      */
-    public function hydrate(array $data): ProductInterface
+    public function hydrate(array $data): Entity
     {
         $product = new FurnitureProduct();
         $product->setId((int)$data['id']);

@@ -5,6 +5,9 @@ declare(strict_types=1);
 namespace App\Infrastructure\Factories;
 
 use App\Application\Dto\CreateProductDtoInterface;
+use App\Core\DtoInterface;
+use App\Core\Entity;
+use App\Core\FactoryInterface;
 use App\Domain\Contracts\ProductInterface;
 
 /**
@@ -15,21 +18,30 @@ use App\Domain\Contracts\ProductInterface;
  * This follows the Factory Method pattern as required
  * by Scandiweb guidelines.
  */
-abstract class ProductFactory
+abstract class ProductFactory implements FactoryInterface
 {
     /**
-     * Create a new Product entity from a DTO.
+     * {@inheritDoc}
+     *
+     * @param DtoInterface $dto The validated DTO.
+     * @return Entity The created product entity.
+     */
+    public function createFromDto(DtoInterface $dto): Entity
+    {
+        /** @var CreateProductDtoInterface $dto */
+        return $this->createFromProductDto($dto);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    abstract public function createFromArray(array $data): Entity;
+
+    /**
+     * Create a new Product entity from a Product DTO.
      *
      * @param CreateProductDtoInterface $dto The validated DTO.
      * @return ProductInterface The created product entity.
      */
-    abstract public function createFromDto(CreateProductDtoInterface $dto): ProductInterface;
-
-    /**
-     * Create a new Product entity from an array of data.
-     *
-     * @param array<string, mixed> $data The product data.
-     * @return ProductInterface The created product entity.
-     */
-    abstract public function createFromArray(array $data): ProductInterface;
+    abstract public function createFromProductDto(CreateProductDtoInterface $dto): ProductInterface;
 }
