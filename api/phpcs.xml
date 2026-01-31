@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<ruleset name="Scandiweb Junior Assignment">
+    <description>PSR-12 style and PHP 7.4 compatibility. Vendor and generated files are excluded.</description>
+
+    <!-- Only scan our source directories -->
+    <file>app</file>
+    <file>routes</file>
+    <file>public</file>
+
+    <!-- Exclude non-source directories -->
+    <exclude-pattern>vendor/*</exclude-pattern>
+    <exclude-pattern>database/*</exclude-pattern>
+    <exclude-pattern>*.min.js</exclude-pattern>
+
+    <!-- Ensure we test for PHP 7.4 compatibility -->
+    <config name="testVersion" value="7.4-7.4"/>
+
+    <!-- Style rules -->
+    <rule ref="PSR12"/>
+
+    <!-- PHP version compatibility checks -->
+    <rule ref="PHPCompatibility"/>
+</ruleset>

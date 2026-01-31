@@ -1,63 +1,28 @@
 <?php
+
 declare(strict_types=1);
 
-if (!function_exists('jsonResponse')) {
+if (!function_exists('dd')) {
     /**
-     * Create a JSON response.
+     * Dumps a variable's contents, wrapped in <pre> tags for readability, and halts execution.
      *
-     * @param mixed $data
-     * @param int $status
-     * @param array $headers
-     * @return array
+     * @param mixed $var The variable to inspect.
+     * @return void
      */
-    function jsonResponse(
-        mixed $data = null,
-        int $status = 200,
-        array $headers = []
-    ): array {
-        // Set HTTP status code
-        http_response_code($status);
-        
-        // Set default headers
-        $defaultHeaders = ['Content-Type' => 'application/json'];
-        $allHeaders = array_merge($defaultHeaders, $headers);
-        
-        // Set headers
-        foreach ($allHeaders as $key => $value) {
-            header("$key: $value");
-        }
-        
-        // Return the data (will be handled by App class)
-        return $data;
-    }
-}
-
-if (!function_exists('json')) {
-    /**
-     * Alias for jsonResponse.
-     *
-     * @param mixed $data
-     * @param int $status
-     * @param array $headers
-     * @return array
-     */
-    function json(
-        mixed $data = null,
-        int $status = 200,
-        array $headers = []
-    ): array {
-        return jsonResponse($data, $status, $headers);
-    }
-}
-
-if (!function_exists('response')) {
-    /**
-     * Response helper for creating responses.
-     *
-     * @return \App\Core\Response
-     */
-    function response(): \App\Core\Response
+    function dd($var)
     {
-        return new \App\Core\Response();
+        echo '<pre style="
+            background-color: #f7f7f7;
+            border: 1px solid #ccc;
+            padding: 15px;
+            white-space: pre-wrap;
+            word-break: break-all;
+            font-size: 14px;
+            line-height: 1.4;
+            color: #333;
+        ">';
+        var_dump($var);
+        echo '</pre>';
+        die();
     }
 }
