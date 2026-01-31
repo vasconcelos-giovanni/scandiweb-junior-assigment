@@ -31,7 +31,13 @@ class Container
         // Get the concrete implementation
         $concrete = $this->bindings[$abstract] ?? null;
 
+        // If no binding exists, try to auto-resolve the class
         if ($concrete === null) {
+            if (class_exists($abstract)) {
+                $instance = $this->resolve($abstract);
+                $this->fireResolvingCallbacks($abstract, $instance);
+                return $instance;
+            }
             throw new \InvalidArgumentException("No binding found for {$abstract}");
         }
 
@@ -51,6 +57,52 @@ class Container
         $this->fireResolvingCallbacks($abstract, $instance);
 
         return $instance;
+    }
+
+    /**
+     * Auto-resolve a class by reflecting its constructor dependencies.
+     *
+     * @param string $class
+     * @return object
+     * @throws \InvalidArgumentException
+     */
+    private function resolve(string $class): object
+    {
+        $reflector = new \ReflectionClass($class);
+
+        if (!$reflector->isInstantiable()) {
+            throw new \InvalidArgumentException("Class {$class} is not instantiable");
+        }
+
+        $constructor = $reflector->getConstructor();
+
+        // If there's no constructor, just instantiate the class
+        if ($constructor === null) {
+            return new $class();
+        }
+
+        $parameters = $constructor->getParameters();
+        $dependencies = [];
+
+        foreach ($parameters as $parameter) {
+            $type = $parameter->getType();
+
+            if ($type === null || $type->isBuiltin()) {
+                // Check for default value
+                if ($parameter->isDefaultValueAvailable()) {
+                    $dependencies[] = $parameter->getDefaultValue();
+                } else {
+                    throw new \InvalidArgumentException(
+                        "Cannot resolve parameter \${$parameter->getName()} in class {$class}"
+                    );
+                }
+            } else {
+                // Recursively resolve the dependency
+                $dependencies[] = $this->make($type->getName());
+            }
+        }
+
+        return $reflector->newInstanceArgs($dependencies);
     }
 
     public function instance(string $abstract, $instance): void

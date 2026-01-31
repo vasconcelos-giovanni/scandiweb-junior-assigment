@@ -98,8 +98,8 @@ class ProductController
     /**
      * DELETE /products
      *
-     * Mass delete products by SKUs.
-     * Expects JSON body: { "skus": ["SKU1", "SKU2", ...] }
+     * Mass delete products by IDs.
+     * Expects JSON body: { "ids": [1, 2, ...] }
      *
      * @param Request $request The HTTP request with JSON body.
      * @return Response JSON response with deleted count.
@@ -112,21 +112,17 @@ class ProductController
             return Response::error('Invalid JSON data', null, 400);
         }
 
-        // Support both 'skus' and 'ids' for deletion
-        if (isset($data['skus']) && is_array($data['skus'])) {
-            $deletedCount = $this->productService->deleteProductsBySkus($data['skus']);
-        } elseif (isset($data['ids']) && is_array($data['ids'])) {
+        if (isset($data['ids']) && is_array($data['ids'])) {
             $ids = array_map('intval', $data['ids']);
             $deletedCount = $this->productService->deleteProductsByIds($ids);
         } else {
             throw new ValidationException([
-                'skus' => 'Please provide an array of SKUs or IDs to delete.'
+                'ids' => 'Please provide an array of IDs to delete.'
             ]);
         }
 
         return Response::json([
-            'message' => 'Products deleted successfully.',
-            'deleted_count' => $deletedCount,
+            'message' => 'Products deleted successfully.'
         ]);
     }
 }

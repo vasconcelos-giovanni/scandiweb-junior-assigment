@@ -6,8 +6,8 @@
 -- Child tables store type-specific attributes and reference the parent via FK.
 -- ============================================================================
 
-CREATE DATABASE IF NOT EXISTS db_scandiweb_junior_assigment;
-USE db_scandiweb_junior_assigment;
+CREATE DATABASE IF NOT EXISTS db_scandiweb_jr_assigment;
+USE db_scandiweb_jr_assigment;
 
 -- ============================================================================
 -- Parent Table: products
@@ -73,11 +73,11 @@ CREATE TABLE IF NOT EXISTS furniture_products (
 -- Sample Data (Optional - for testing)
 -- ============================================================================
 
--- INSERT INTO products (sku, name, price, type) VALUES
---     ('DVD-001', 'Inception', 19.99, 'dvd'),
---     ('BOOK-001', 'Clean Code', 29.99, 'book'),
---     ('FURN-001', 'Office Chair', 199.99, 'furniture');
+INSERT INTO products (sku, name, price, type) VALUES
+    ('DVD-001', 'Inception', 19.99, 'dvd'),
+    ('BOOK-001', 'Clean Code', 29.99, 'book'),
+    ('FURN-001', 'Office Chair', 199.99, 'furniture');
 
--- INSERT INTO dvd_products (id, size) VALUES (1, 700);
--- INSERT INTO book_products (id, weight) VALUES (2, 0.5);
--- INSERT INTO furniture_products (id, height, width, length) VALUES (3, 120, 60, 60);
+INSERT INTO dvd_products (id, size) VALUES (1, 700);
+INSERT INTO book_products (id, weight) VALUES (2, 0.5);
+INSERT INTO furniture_products (id, height, width, length) VALUES (3, 120, 60, 60);

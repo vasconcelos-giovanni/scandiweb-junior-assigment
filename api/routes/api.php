@@ -31,7 +31,6 @@ $router->get('/test', function () {
  * GET /products
  *
  * List all products with their type-specific attributes.
- * Products are sorted by ID (primary key) as required by Scandiweb.
  */
 $router->get('/products', [ProductController::class, 'index']);
 
@@ -60,8 +59,6 @@ $router->post('/products', [ProductController::class, 'store']);
  * Mass delete products.
  *
  * Request body (JSON):
- * - skus: string[] (array of SKUs to delete)
- *   OR
  * - ids: number[] (array of IDs to delete)
  */
 $router->delete('/products', [ProductController::class, 'destroy']);
