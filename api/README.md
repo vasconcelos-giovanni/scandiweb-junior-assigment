@@ -321,7 +321,16 @@ class Router
 <?php
 declare(strict_types=1);
 
+use App\Core\Response;
 use App\Http\Controllers\ProductController;
+
+// Health check route
+$router->get('/test', function () {
+    return Response::json([
+        'message' => 'API is working!',
+        'timestamp' => date('Y-m-d H:i:s'),
+    ]);
+});
 
 // List all products
 $router->get('/products', [ProductController::class, 'index']);
@@ -329,7 +338,7 @@ $router->get('/products', [ProductController::class, 'index']);
 // Create a new product
 $router->post('/products', [ProductController::class, 'store']);
 
-// Mass delete products
+// Mass delete products by IDs
 $router->delete('/products', [ProductController::class, 'destroy']);
 ```
 
@@ -547,6 +556,7 @@ abstract class Repository
     
     protected function getTableName(): string;
     protected function query(): QueryBuilder;
+    protected function getDatabase(): Database;
     
     public function find(int $id): ?Entity;
     public function findAll(): array;
@@ -853,6 +863,7 @@ class ProductService
         return $this->productRepository->save($product);
     }
     
+    public function createProductFromDto(CreateProductDtoInterface $dto): ProductInterface;
     public function deleteProductsBySkus(array $skus): int;
     public function deleteProductsByIds(array $ids): int;
 }
@@ -898,6 +909,8 @@ class DvdProductFactory extends ProductFactory
 ```php
 class ProductFactoryResolver
 {
+    public function __construct(Container $container);
+    
     public function resolve(string $type): ProductFactory
     {
         $key = "product.factory.{$type}";
@@ -906,6 +919,8 @@ class ProductFactoryResolver
         }
         return $this->container->make($key);
     }
+    
+    public function hasFactory(string $type): bool;
 }
 ```
 
@@ -942,6 +957,7 @@ class ProductHydratorRegistry
     public function register(string $type, ProductHydratorInterface $hydrator): void;
     public function get(string $type): ProductHydratorInterface;
     public function has(string $type): bool;
+    public function getRegisteredTypes(): array;
 }
 ```
 
@@ -954,18 +970,24 @@ class ProductRepository extends Repository
 {
     public function findAll(): array
     {
-        $sql = "
-            SELECT 
-                p.id, p.sku, p.name, p.price, p.type,
-                d.size,
-                b.weight,
-                f.height, f.width, f.length
-            FROM products p
-            LEFT JOIN dvd_products d ON p.id = d.id
-            LEFT JOIN book_products b ON p.id = b.id
-            LEFT JOIN furniture_products f ON p.id = f.id
-            ORDER BY p.id ASC
-        ";
+        $rows = DB::table('products')
+            ->select([
+                'products.id',
+                'products.sku',
+                'products.name',
+                'products.price',
+                'products.type',
+                'dvd_products.size',
+                'book_products.weight',
+                'furniture_products.height',
+                'furniture_products.width',
+                'furniture_products.length'
+            ])
+            ->leftJoin('dvd_products', 'products.id', '=', 'dvd_products.id')
+            ->leftJoin('book_products', 'products.id', '=', 'book_products.id')
+            ->leftJoin('furniture_products', 'products.id', '=', 'furniture_products.id')
+            ->orderBy('products.id', 'ASC')
+            ->get();
         // ... hydrate results using registry
     }
     
@@ -1015,14 +1037,18 @@ class ProductController
     {
         $data = $request->getJson();
         $product = $this->productService->createProduct($data);
-        return Response::created($product->toArray());
+        return Response::created(
+            $product->toArray(),
+            'Product created successfully.'
+        );
     }
     
     public function destroy(Request $request): Response
     {
         $data = $request->getJson();
-        $count = $this->productService->deleteProductsBySkus($data['skus']);
-        return Response::json(['deleted_count' => $count]);
+        $ids = array_map('intval', $data['ids']);
+        $this->productService->deleteProductsByIds($ids);
+        return Response::json(['message' => 'Products deleted successfully.']);
     }
 }
 ```
@@ -1071,8 +1097,8 @@ class ProductServiceProvider extends ServiceProvider
 
 | Exception | HTTP Status | Usage |
 |-----------|-------------|-------|
-| `ValidationException` | 400 | Invalid input data |
-| `DuplicateSkuException` | 400 | SKU already exists |
+| `ValidationException` | 422 | Invalid input data |
+| `DuplicateSkuException` | 409 | SKU already exists |
 | `NotFoundException` | 404 | Resource not found |
 
 All exceptions are caught by `ExceptionHandlerMiddleware` and returned as JSON:
@@ -1095,33 +1121,42 @@ All exceptions are caught by `ExceptionHandlerMiddleware` and returned as JSON:
 The schema uses **Class Table Inheritance (CTI)**:
 
 ```sql
+-- Create database (MySQL)
+CREATE DATABASE IF NOT EXISTS db_scandiweb_jr_assigment;
+USE db_scandiweb_jr_assigment;
+
 -- Parent table (common attributes)
 CREATE TABLE products (
     id INT PRIMARY KEY AUTO_INCREMENT,
     sku VARCHAR(255) NOT NULL UNIQUE,
     name VARCHAR(255) NOT NULL,
     price DECIMAL(10, 2) NOT NULL,
-    type ENUM('dvd', 'book', 'furniture') NOT NULL
+    type ENUM('dvd', 'book', 'furniture') NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    
+    INDEX idx_sku (sku),
+    INDEX idx_type (type)
 );
 
 -- Child tables (type-specific attributes)
 CREATE TABLE dvd_products (
     id INT PRIMARY KEY,
-    size INT NOT NULL,
+    size INT NOT NULL COMMENT 'Size in megabytes (MB)',
     FOREIGN KEY (id) REFERENCES products(id) ON DELETE CASCADE
 );
 
 CREATE TABLE book_products (
     id INT PRIMARY KEY,
-    weight DECIMAL(10, 2) NOT NULL,
+    weight DECIMAL(10, 2) NOT NULL COMMENT 'Weight in kilograms (Kg)',
     FOREIGN KEY (id) REFERENCES products(id) ON DELETE CASCADE
 );
 
 CREATE TABLE furniture_products (
     id INT PRIMARY KEY,
-    height INT NOT NULL,
-    width INT NOT NULL,
-    length INT NOT NULL,
+    height INT NOT NULL COMMENT 'Height dimension',
+    width INT NOT NULL COMMENT 'Width dimension',
+    length INT NOT NULL COMMENT 'Length dimension',
     FOREIGN KEY (id) REFERENCES products(id) ON DELETE CASCADE
 );
 ```
@@ -1129,6 +1164,18 @@ CREATE TABLE furniture_products (
 ---
 
 ## API Endpoints
+
+### GET /test
+
+Health check endpoint to verify the API is running.
+
+**Response:**
+```json
+{
+    "message": "API is working!",
+    "timestamp": "2024-01-15 10:30:00"
+}
+```
 
 ### GET /products
 
@@ -1213,20 +1260,19 @@ Create a new product.
 
 ### DELETE /products
 
-Mass delete products.
+Mass delete products by IDs.
 
 **Request:**
 ```json
 {
-    "skus": ["DVD-001", "BOOK-001"]
+    "ids": [1, 2, 3]
 }
 ```
 
 **Response:**
 ```json
 {
-    "message": "Products deleted successfully.",
-    "deleted_count": 2
+    "message": "Products deleted successfully."
 }
 ```
 
@@ -1252,16 +1298,25 @@ Mass delete products.
 ### Environment Variables (`.env`)
 
 ```env
-# Database Configuration
-DB_DRIVER=mysql
+# Application Settings
+APP_ENV=development
+APP_DEBUG=true
+
+# Database Configuration (SQLite - default for development)
+DB_DRIVER=sqlite
 DB_HOST=localhost
 DB_PORT=3306
-DB_DATABASE=db_scandiweb_junior_assigment
+DB_DATABASE=database/database.sqlite
 DB_USERNAME=root
-DB_PASSWORD=
+DB_PASSWORD=root
 
-# Application
-APP_DEBUG=true
+# For MySQL production:
+# DB_DRIVER=mysql
+# DB_HOST=localhost
+# DB_PORT=3306
+# DB_DATABASE=db_scandiweb_junior_assigment
+# DB_USERNAME=root
+# DB_PASSWORD=
 ```
 
 ---
@@ -1271,7 +1326,7 @@ APP_DEBUG=true
 ### Requirements
 
 - PHP ^7.0
-- MySQL ^5.6
+- MySQL ^5.6 (for production) or SQLite (for development)
 - Composer
 
 ### Installation
@@ -1292,9 +1347,11 @@ composer install
 cp .env.example .env
 ```
 
-4. Configure database in `.env`
+4. Configure database in `.env`:
+   - **SQLite (default)**: No additional configuration needed
+   - **MySQL**: Update `DB_DRIVER=mysql` and set connection details
 
-5. Run database migrations:
+5. For MySQL, run database migrations:
 ```bash
 mysql -u root -p < database/scripts/db_scandiweb_junior_assigment.sql
 ```
@@ -1306,6 +1363,10 @@ php -S localhost:8000 -t public
 
 7. Test the API:
 ```bash
+# Health check
+curl http://localhost:8000/test
+
+# List products
 curl http://localhost:8000/products
 ```
 
