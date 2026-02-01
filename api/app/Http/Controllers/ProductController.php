@@ -41,7 +41,7 @@ class ProductController
     {
         $products = $this->productService->getAllProducts();
 
-        return Response::json($products);
+        return Response::json(['data' => $products]);
     }
 
     /**
