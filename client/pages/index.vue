@@ -1,9 +1,11 @@
 <template>
-  <v-container class="main-content">
+  <v-container>
     <!-- Page Header -->
-    <div class="page-header">
-      <h1>Product List</h1>
-      <div class="header-actions">
+    <div class="d-flex justify-space-between align-center flex-wrap ga-4 pb-4 mb-6" style="border-bottom: 1px solid rgba(0,0,0,0.12);">
+      <h1 class="text-h4 font-weight-medium ma-0">
+        Product List
+      </h1>
+      <div class="d-flex ga-3">
         <v-btn
           color="secondary"
           variant="outlined"
@@ -36,18 +38,24 @@
     </div>
 
     <!-- Products Grid -->
-    <div
+    <v-row
       v-else-if="products.length > 0"
-      class="product-grid"
     >
-      <ProductCard
+      <v-col
         v-for="product in products"
         :key="product.id"
-        :product="product"
-        :selected="selectedIds.includes(product.id)"
-        @update:selected="toggleSelection(product.id, $event)"
-      />
-    </div>
+        cols="12"
+        sm="6"
+        md="4"
+        lg="3"
+      >
+        <ProductCard
+          :product="product"
+          :selected="selectedIds.includes(product.id)"
+          @update:selected="toggleSelection(product.id, $event)"
+        />
+      </v-col>
+    </v-row>
 
     <!-- Empty State -->
     <v-card
@@ -124,49 +132,3 @@ onMounted(() => {
   fetchProducts()
 })
 </script>
-
-<style scoped lang="scss">
-.page-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 24px;
-  flex-wrap: wrap;
-  gap: 16px;
-  border-bottom: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
-  padding-bottom: 16px;
-
-  h1 {
-    margin: 0;
-    font-size: 1.75rem;
-    font-weight: 500;
-  }
-
-  .header-actions {
-    display: flex;
-    gap: 12px;
-  }
-}
-
-.product-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 16px;
-}
-
-@media (max-width: 600px) {
-  .page-header {
-    flex-direction: column;
-    align-items: flex-start;
-
-    .header-actions {
-      width: 100%;
-      justify-content: flex-end;
-    }
-  }
-
-  .product-grid {
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-  }
-}
-</style>

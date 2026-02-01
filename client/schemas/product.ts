@@ -29,6 +29,7 @@ export const BaseProductSchema = z.object({
         .number({ message: 'Price is required and must be a number' })
         .positive('Price must be a positive number')
         .multipleOf(0.01, 'Price must have at most 2 decimal places'),
+    specific_attribute: z.string().optional(),
 })
 
 /**

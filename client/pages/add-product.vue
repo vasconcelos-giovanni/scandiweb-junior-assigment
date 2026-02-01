@@ -1,9 +1,11 @@
 <template>
-  <v-container class="main-content">
+  <v-container>
     <!-- Page Header -->
-    <div class="page-header">
-      <h1>Product Add</h1>
-      <div class="header-actions">
+    <div class="d-flex justify-space-between align-center flex-wrap ga-4 pb-4 mb-6" style="border-bottom: 1px solid rgba(0,0,0,0.12);">
+      <h1 class="text-h4 font-weight-medium ma-0">
+        Product Add
+      </h1>
+      <div class="d-flex ga-3">
         <v-btn
           color="primary"
           variant="outlined"
@@ -27,12 +29,11 @@
     <!-- Product Form -->
     <v-form
       id="product_form"
-      ref="formRef"
-      class="product-form"
+      style="max-width: 600px;"
       @submit.prevent="handleSave"
     >
       <!-- Common Fields -->
-      <div class="form-section">
+      <div class="mb-2">
         <v-text-field
           id="sku"
           v-model="formState.sku"
@@ -68,7 +69,7 @@
       </div>
 
       <!-- Type Switcher -->
-      <div class="form-section">
+      <div class="mb-2">
         <v-select
           id="productType"
           v-model="formState.type"
@@ -83,7 +84,11 @@
       </div>
 
       <!-- Type-Specific Fields -->
-      <div class="type-specific-fields">
+      <v-sheet
+        color="grey-lighten-4"
+        rounded="lg"
+        class="pa-4 mt-2"
+      >
         <!-- DVD Fields -->
         <template v-if="formState.type === 'dvd'">
           <v-text-field
@@ -98,9 +103,9 @@
             :disabled="loading"
             required
           />
-          <div class="type-description">
+          <p class="text-body-2 text-medium-emphasis font-italic mt-2">
             Please provide disc size in MB
-          </div>
+          </p>
         </template>
 
         <!-- Book Fields -->
@@ -117,9 +122,9 @@
             :disabled="loading"
             required
           />
-          <div class="type-description">
+          <p class="text-body-2 text-medium-emphasis font-italic mt-2">
             Please provide book weight in KG
-          </div>
+          </p>
         </template>
 
         <!-- Furniture Fields -->
@@ -162,11 +167,11 @@
             :disabled="loading"
             required
           />
-          <div class="type-description">
+          <p class="text-body-2 text-medium-emphasis font-italic mt-2">
             Please provide dimensions in HxWxL format
-          </div>
+          </p>
         </template>
-      </div>
+      </v-sheet>
 
       <!-- Error Alert -->
       <v-alert
@@ -329,61 +334,3 @@ watch(
   },
 )
 </script>
-
-<style scoped lang="scss">
-.page-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 24px;
-  flex-wrap: wrap;
-  gap: 16px;
-  border-bottom: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
-  padding-bottom: 16px;
-
-  h1 {
-    margin: 0;
-    font-size: 1.75rem;
-    font-weight: 500;
-  }
-
-  .header-actions {
-    display: flex;
-    gap: 12px;
-  }
-}
-
-.product-form {
-  max-width: 600px;
-
-  .form-section {
-    margin-bottom: 8px;
-  }
-
-  .type-specific-fields {
-    background: rgba(var(--v-theme-surface-light), 1);
-    padding: 16px;
-    border-radius: 8px;
-    margin-top: 8px;
-
-    .type-description {
-      font-size: 0.85rem;
-      color: rgba(var(--v-theme-on-surface), 0.6);
-      margin-top: 8px;
-      font-style: italic;
-    }
-  }
-}
-
-@media (max-width: 600px) {
-  .page-header {
-    flex-direction: column;
-    align-items: flex-start;
-
-    .header-actions {
-      width: 100%;
-      justify-content: flex-end;
-    }
-  }
-}
-</style>
