@@ -30,9 +30,6 @@ export default defineNuxtConfig({
         },
     },
 
-    // CSS configuration
-    css: ['~/assets/styles/main.scss'],
-
     // Runtime configuration
     runtimeConfig: {
         public: {
