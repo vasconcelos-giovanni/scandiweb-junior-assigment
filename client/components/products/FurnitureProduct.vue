@@ -25,7 +25,7 @@
         />
 
         <v-text-field
-            id="length"
+            id="lenght"
             v-model="formState.length"
             label="Length (CM)"
             placeholder="Enter length in CM"
