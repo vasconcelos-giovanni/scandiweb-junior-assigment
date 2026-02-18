@@ -8,6 +8,7 @@ declare(strict_types=1);
 $allowedOrigins = [
     'http://localhost:3000',
     'http://127.0.0.1:3000',
+    'https://scandiweb-junior-assigment.vercel.app',
 ];
 
 $origin = $_SERVER['HTTP_ORIGIN'] ?? '';
