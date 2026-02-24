@@ -21,23 +21,5 @@
         ]
     },
     "minimum-stability": "stable",
-    "prefer-stable": true,
-    "config": {
-        "platform": {
-            "php": "7.4.33"
-        },
-        "allow-plugins": {
-            "dealerdirect/phpcodesniffer-composer-installer": true
-        }
-    },
-    "require-dev": {
-        "squizlabs/php_codesniffer": "^3.7",
-        "dealerdirect/phpcodesniffer-composer-installer": "^1.0",
-        "phpcompatibility/php-compatibility": "^9.3"
-    },
-    "scripts": {
-        "lint": "vendor/bin/phpcs --standard=phpcs.xml",
-        "fix": "vendor/bin/phpcbf --standard=phpcs.xml",
-        "compat": "vendor/bin/phpcs --standard=phpcs.xml --runtime-set testVersion 7.4-7.4"
-    }
+    "prefer-stable": true
 }
