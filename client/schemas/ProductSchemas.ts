@@ -30,7 +30,13 @@ export const BaseProductSchema = z.object({
     price: z
         .number({ message: 'Price is required and must be a number' })
         .positive('Price must be a positive number')
-        .multipleOf(0.01, 'Price must have at most 2 decimal places'),
+        .refine(
+            (val) => {
+                const parts = String(val).split('.')
+                return !parts[1] || parts[1].length <= 2
+            },
+            { message: 'Price must have at most 2 decimal places' },
+        ),
 })
 
 export const DvdProductSchema = BaseProductSchema.extend({
