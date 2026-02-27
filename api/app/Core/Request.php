@@ -124,14 +124,36 @@ class Request
      */
     public function getJson(): ?array
     {
+        $rawBody = file_get_contents('php://input');
+
+        if (empty($rawBody)) {
+            return null;
+        }
+
         $contentType = $this->getHeader('Content-Type', '');
 
-        if (strpos($contentType, 'application/json') !== false) {
-            $rawBody = file_get_contents('php://input');
-            return json_decode($rawBody, true) ?: null;
+        // Parse if Content-Type is JSON, or if the body looks like JSON as fallback
+        if (
+            strpos($contentType, 'application/json') !== false
+            || $this->looksLikeJson($rawBody)
+        ) {
+            $decoded = json_decode($rawBody, true);
+            return is_array($decoded) ? $decoded : null;
         }
 
         return null;
+    }
+
+    /**
+     * Check if a string looks like JSON (starts with { or [).
+     *
+     * @param string $str
+     * @return bool
+     */
+    private function looksLikeJson(string $str): bool
+    {
+        $trimmed = ltrim($str);
+        return isset($trimmed[0]) && ($trimmed[0] === '{' || $trimmed[0] === '[');
     }
 
     /**
@@ -152,14 +174,14 @@ class Request
 
         // Add some common headers that might not have HTTP_ prefix
         $specialHeaders = [
-            'CONTENT_TYPE' => 'Content-Type',
-            'CONTENT_LENGTH' => 'Content-Length',
-            'CONTENT_MD5' => 'Content-Md5',
+            'CONTENT_TYPE',
+            'CONTENT_LENGTH',
+            'CONTENT_MD5',
         ];
 
-        foreach ($specialHeaders as $serverKey => $headerKey) {
-            if (isset($this->server[$serverKey])) {
-                $headers[$headerKey] = $this->server[$serverKey];
+        foreach ($specialHeaders as $serverKey) {
+            if (isset($this->server[$serverKey]) && !isset($headers[$serverKey])) {
+                $headers[$serverKey] = $this->server[$serverKey];
             }
         }
 
