@@ -60,16 +60,35 @@
                     />
 
                     <!-- Type Switcher -->
-                    <v-select
-                        id="productType"
-                        v-model="formState.type"
-                        label="Type Switcher"
-                        :items="productTypeItems"
-                        item-title="text"
-                        item-value="value"
-                        :error-messages="errors.type"
-                        :disabled="loading"
-                    />
+                    <div class="mb-4">
+                        <label
+                            id="productType-label"
+                            for="productType"
+                            class="v-label text-body-2 mb-1 d-block"
+                        >
+                            Type Switcher
+                        </label>
+                        <select
+                            id="productType"
+                            v-model="formState.type"
+                            :disabled="loading"
+                            class="native-select"
+                        >
+                            <option
+                                v-for="item in productTypeItems"
+                                :key="item.value"
+                                :value="item.value"
+                            >
+                                {{ item.text }}
+                            </option>
+                        </select>
+                        <div
+                            v-if="errors.type"
+                            class="v-messages text-error text-caption mt-1"
+                        >
+                            {{ errors.type }}
+                        </div>
+                    </div>
 
                     <!-- Type-Specific Fields (polymorphic — no conditionals) -->
                     <v-sheet rounded="lg" class="pa-4 mt-2">
@@ -180,3 +199,29 @@ watch(
     },
 )
 </script>
+
+<style scoped>
+.native-select {
+    width: 100%;
+    padding: 12px 16px;
+    font-size: 16px;
+    border: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
+    border-radius: 4px;
+    background-color: transparent;
+    color: inherit;
+    appearance: auto;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.native-select:focus {
+    border-color: rgb(var(--v-theme-primary));
+    border-width: 2px;
+    padding: 11px 15px;
+}
+
+.native-select:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+</style>
